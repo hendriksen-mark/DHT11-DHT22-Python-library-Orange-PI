@@ -1,17 +1,17 @@
 from pyA20.gpio import gpio
 from pyA20.gpio import port
 
-#import RPi.GPIO as GPIO
 import dht
 import time
 import datetime
 
 # initialize GPIO
-PIN2 = port.PA1
+PIN2 = port.PA2
 gpio.init()
 
-# read data using pin
-instance = dht.DHT(pin=PIN2)
+
+# read data using pin 14
+instance = dht.DHT(pin=PIN2, sensor=11)
 
 while True:
     result = instance.read()

@@ -3,8 +3,8 @@ from pyA20.gpio import gpio
 from pyA20.gpio import port
 
 
-class DHT22Result:
-    'DHT22 sensor result returned by DHT22.read() method'
+class DHTResult:
+    'DHT sensor result returned by DHT.read() method'
 
     ERR_NO_ERROR = 0
     ERR_MISSING_DATA = 1
@@ -23,13 +23,18 @@ class DHT22Result:
         return self.error_code == DHT22Result.ERR_NO_ERROR
 
 
-class DHT22:
-    'DHT22 sensor reader class for Raspberry'
+class DHT:
+    'DHT sensor reader class for Raspberry'
 
     __pin = 0
 
-    def __init__(self, pin):
+    def __init__(self, pin, sensor=22):
         self.__pin = pin
+        # Sensor should be set to DHT11 or DHT22.
+        if sensor in [22,11]:
+            self.__sensor = sensor
+        else:
+            raise ValueError('invalid sensor dht')
 
     def read(self):
         gpio.setcfg(self.__pin, gpio.OUTPUT)
@@ -55,7 +60,7 @@ class DHT22:
         # Fix issue on my Board with AM2301 to ensure at least the data is
         # available
         if len(pull_up_lengths) < 40:
-            return DHT22Result(DHT22Result.ERR_MISSING_DATA, 0, 0)
+            return DHTResult(DHTResult.ERR_MISSING_DATA, 0, 0)
 
         # calculate bits from lengths of the pull up periods
         bits = self.__calculate_bits(pull_up_lengths)
@@ -66,20 +71,25 @@ class DHT22:
         # calculate checksum and check
         checksum = self.__calculate_checksum(the_bytes)
         if the_bytes[4] != checksum:
-            return DHT22Result(DHT22Result.ERR_CRC, 0, 0)
+            return DHTResult(DHTResult.ERR_CRC, 0, 0)
 
-        # Compute to ensure negative values are taken into account
-        c = (float)(((the_bytes[2] & 0x7F) << 8) + the_bytes[3]) / 10
+        if self.__sensor == 22:
+            # Compute to ensure negative values are taken into account
+            c = (float)(((the_bytes[2] & 0x7F) << 8) + the_bytes[3]) / 10
+    
+            # ok, we have valid data, return it
+            if (c > 125):
+                c = the_bytes[2]
+    
+            if (the_bytes[2] & 0x80):
+                c = -c
+    
+            return DHTResult(DHTResult.ERR_NO_ERROR,
+                               c, ((the_bytes[0] << 8) + the_bytes[1]) / 10.00)
+        else:
+            # ok, we have valid data, return it
+            return DHTResult(DHTResult.ERR_NO_ERROR, the_bytes[2], the_bytes[0])
 
-        # ok, we have valid data, return it
-        if (c > 125):
-            c = the_bytes[2]
-
-        if (the_bytes[2] & 0x80):
-            c = -c
-
-        return DHT22Result(DHT22Result.ERR_NO_ERROR,
-                           c, ((the_bytes[0] << 8) + the_bytes[1]) / 10.00)
 
     def __send_and_sleep(self, output, sleep):
         gpio.output(self.__pin, output)
