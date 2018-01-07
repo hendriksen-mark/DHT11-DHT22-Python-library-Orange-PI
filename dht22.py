@@ -1,7 +1,6 @@
 import time
 from pyA20.gpio import gpio
 from pyA20.gpio import port
-#import RPi
 
 
 class DHT22Result:
@@ -43,9 +42,8 @@ class DHT22:
 
         # change to input using pull up
         #gpio.setcfg(self.__pin, gpio.INPUT, gpio.PULLUP)
-	gpio.setcfg(self.__pin, gpio.INPUT)
-	gpio.pullup(self.__pin, gpio.PULLUP)
-
+        gpio.setcfg(self.__pin, gpio.INPUT)
+        gpio.pullup(self.__pin, gpio.PULLUP)
 
         # collect data into an array
         data = self.__collect_input()
@@ -54,7 +52,9 @@ class DHT22:
         pull_up_lengths = self.__parse_data_pull_up_lengths(data)
 
         # if bit count mismatch, return error (4 byte data + 1 byte checksum)
-        if len(pull_up_lengths) != 40:
+        # Fix issue on my Board with AM2301 to ensure at least the data is
+        # available
+        if len(pull_up_lengths) < 40:
             return DHT22Result(DHT22Result.ERR_MISSING_DATA, 0, 0)
 
         # calculate bits from lengths of the pull up periods
@@ -68,11 +68,18 @@ class DHT22:
         if the_bytes[4] != checksum:
             return DHT22Result(DHT22Result.ERR_CRC, 0, 0)
 
-        # ok, we have valid data, return it
-        return DHT22Result(DHT22Result.ERR_NO_ERROR, 
-			   (((the_bytes[2] & 0x7F)<<8)+the_bytes[3])/10.00,
-			   ((the_bytes[0]<<8)+the_bytes[1])/10.00)
+        # Compute to ensure negative values are taken into account
+        c = (float)(((the_bytes[2] & 0x7F) << 8) + the_bytes[3]) / 10
 
+        # ok, we have valid data, return it
+        if (c > 125):
+            c = the_bytes[2]
+
+        if (the_bytes[2] & 0x80):
+            c = -c
+
+        return DHT22Result(DHT22Result.ERR_NO_ERROR,
+                           c, ((the_bytes[0] << 8) + the_bytes[1]) / 10.00)
 
     def __send_and_sleep(self, output, sleep):
         gpio.output(self.__pin, output)
@@ -109,8 +116,8 @@ class DHT22:
 
         state = STATE_INIT_PULL_DOWN
 
-        lengths = [] # will contain the lengths of data pull up periods
-        current_length = 0 # will contain the length of the previous period
+        lengths = []  # will contain the lengths of data pull up periods
+        current_length = 0  # will contain the length of the previous period
 
         for i in range(len(data)):
 
@@ -133,14 +140,16 @@ class DHT22:
                     continue
             if state == STATE_DATA_FIRST_PULL_DOWN:
                 if current == gpio.LOW:
-                    # we have the initial pull down, the next will be the data pull up
+                    # we have the initial pull down, the next will be the data
+                    # pull up
                     state = STATE_DATA_PULL_UP
                     continue
                 else:
                     continue
             if state == STATE_DATA_PULL_UP:
                 if current == gpio.HIGH:
-                    # data pulled up, the length of this pull up will determine whether it is 0 or 1
+                    # data pulled up, the length of this pull up will determine
+                    # whether it is 0 or 1
                     current_length = 0
                     state = STATE_DATA_PULL_DOWN
                     continue
@@ -148,7 +157,8 @@ class DHT22:
                     continue
             if state == STATE_DATA_PULL_DOWN:
                 if current == gpio.LOW:
-                    # pulled down, we store the length of the previous pull up period
+                    # pulled down, we store the length of the previous pull up
+                    # period
                     lengths.append(current_length)
                     state = STATE_DATA_PULL_UP
                     continue

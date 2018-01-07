@@ -7,21 +7,17 @@ import time
 import datetime
 
 # initialize GPIO
-#gpio.setwarnings(False)
-#gpio.setmode(GPIO.BCM)
-PIN2 = port.PA6
+PIN2 = port.PA1
 gpio.init()
-#gpio.cleanup()
 
-
-# read data using pin 14
+# read data using pin
 instance = dht22.DHT22(pin=PIN2)
 
 while True:
     result = instance.read()
     if result.is_valid():
         print("Last valid input: " + str(datetime.datetime.now()))
-        print("Temperature: %.2f C" % result.temperature)
-        print("Humidity: %.2f %%" % result.humidity)
+        print("Temperature: {0:0.1f} C".format(result.temperature))
+        print("Humidity: {0:0.1f} %%".format(result.humidity))
 
     time.sleep(1)
