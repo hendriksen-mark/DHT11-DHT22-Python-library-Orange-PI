@@ -59,7 +59,7 @@ class DHT:
         # if bit count mismatch, return error (4 byte data + 1 byte checksum)
         # Fix issue on my Board with AM2301 to ensure at least the data is
         # available
-        if len(pull_up_lengths) < 40:
+        if (self.__sensor == 22 and len(pull_up_lengths) < 40) or (len(pull_up_lengths) != 40):
             return DHTResult(DHTResult.ERR_MISSING_DATA, 0, 0)
 
         # calculate bits from lengths of the pull up periods
