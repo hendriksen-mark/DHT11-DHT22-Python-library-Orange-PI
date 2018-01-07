@@ -20,7 +20,7 @@ class DHTResult:
         self.humidity = humidity
 
     def is_valid(self):
-        return self.error_code == DHT22Result.ERR_NO_ERROR
+        return self.error_code == DHTResult.ERR_NO_ERROR
 
 
 class DHT:
