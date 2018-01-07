@@ -6,7 +6,7 @@ import time
 import datetime
 
 # initialize GPIO
-PIN2 = port.PA2
+PIN2 = port.PA0
 gpio.init()
 
 
