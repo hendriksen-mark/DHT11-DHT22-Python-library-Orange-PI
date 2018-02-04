@@ -31,7 +31,7 @@ class DHT:
     def __init__(self, pin, sensor=22):
         self.__pin = pin
         # Sensor should be set to DHT11 or DHT22.
-        if sensor in [22,11]:
+        if sensor in [22, 11]:
             self.__sensor = sensor
         else:
             raise ValueError('invalid sensor dht')
@@ -59,7 +59,8 @@ class DHT:
         # if bit count mismatch, return error (4 byte data + 1 byte checksum)
         # Fix issue on my Board with AM2301 to ensure at least the data is
         # available
-        if (self.__sensor == 22 and len(pull_up_lengths) < 40) or (len(pull_up_lengths) != 40):
+        pull_up_lengths_size = len(pull_up_lengths)
+        if (self.__sensor == 22 and pull_up_lengths_size < 40) or (self.__sensor == 11 and pull_up_lengths_size != 40):
             return DHTResult(DHTResult.ERR_MISSING_DATA, 0, 0)
 
         # calculate bits from lengths of the pull up periods
@@ -76,20 +77,19 @@ class DHT:
         if self.__sensor == 22:
             # Compute to ensure negative values are taken into account
             c = (float)(((the_bytes[2] & 0x7F) << 8) + the_bytes[3]) / 10
-    
+
             # ok, we have valid data, return it
             if (c > 125):
                 c = the_bytes[2]
-    
+
             if (the_bytes[2] & 0x80):
                 c = -c
-    
+
             return DHTResult(DHTResult.ERR_NO_ERROR,
-                               c, ((the_bytes[0] << 8) + the_bytes[1]) / 10.00)
+                             c, ((the_bytes[0] << 8) + the_bytes[1]) / 10.00)
         else:
             # ok, we have valid data, return it
             return DHTResult(DHTResult.ERR_NO_ERROR, the_bytes[2], the_bytes[0])
-
 
     def __send_and_sleep(self, output, sleep):
         gpio.output(self.__pin, output)

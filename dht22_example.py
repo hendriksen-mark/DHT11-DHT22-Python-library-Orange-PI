@@ -2,7 +2,8 @@ from pyA20.gpio import gpio
 from pyA20.gpio import port
 
 #import RPi.GPIO as GPIO
-import dht
+# import dht
+from . import dht
 import time
 import datetime
 

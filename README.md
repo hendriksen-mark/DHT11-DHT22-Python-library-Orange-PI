@@ -14,7 +14,7 @@ Example:
 from pyA20.gpio import gpio
 from pyA20.gpio import port
  
-import dht22
+import dht
 import time
 import datetime
  
@@ -23,7 +23,7 @@ PIN2 = port.PA6
 gpio.init()
  
 # read data using pin
-instance = dht22.DHT22(pin=PIN2)
+instance = dht.DHT(pin=PIN2)
  
 while True:
     result = instance.read()
@@ -36,3 +36,7 @@ while True:
 ```    
 Please see tutorial:
 http://www.piprojects.xyz/temperature-sensor-orange-pi-python-code/
+
+
+Source project
+https://github.com/ionutpi/DHT22-Python-library-Orange-PI
