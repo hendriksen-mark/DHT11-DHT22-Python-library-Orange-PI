@@ -18,7 +18,7 @@ class DHTInterface(object):
     classdocs
     '''
 
-    def __init__(self, pa_number=0, sensor=22):
+    def __init__(self, pa_number=0, sensor=22, debug=False):
         '''
         Constructor
         '''
@@ -28,9 +28,12 @@ class DHTInterface(object):
         elif 1 == pa_number:
             self._pin = port.PA1
 
+        self._sensor = sensor
+        
+        self._debug = debug
         gpio.init()
 
-        # read data using pin 14
+        # read data using pin 
         self._instance = dht.DHT(pin=self._pin, sensor=sensor)
 
     def get_valeurs(self):
@@ -40,8 +43,12 @@ class DHTInterface(object):
             result = self._instance.read()
             counter += 1
 
-        print("Last valid input: " + str(datetime.datetime.now()))
-        print("Temperature: {0:0.1f} C".format(result.temperature))
-        print("Humidity: {0:0.1f} %%".format(result.humidity))
+        if self._debug:
+            print("Last valid input: " + str(datetime.datetime.now()))
+            print("Temperature: {0:0.1f} C".format(result.temperature))
+            print("Humidity: {0:0.1f} %%".format(result.humidity))
 
         return result.temperature, result.humidity
+    
+    def get_sensor(self):
+        return self._sensor
