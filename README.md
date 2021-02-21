@@ -7,7 +7,13 @@ https://forum.armbian.com/topic/5718-need-help-with-dht11-temp-sensor-and-python
 + Usage with Python3
 + Usage with pyA20 for OPi Zero https://github.com/nvl1109/orangepi_zero_gpio
 
-# Usage
+## My Case of usage
+
+* Used with a Orange Pi Zero H2+
+* Used with a AM2301 setup as DHT22
+* Used with a DHT11
+* Used within a display SSD 1306 with [https://github.com/jingl3s/OrangePiZero_OLED_Dht_display](https://github.com/jingl3s/OrangePiZero_OLED_Dht_display)
+## Usage
 
 Example:
 ```python
