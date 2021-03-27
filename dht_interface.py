@@ -1,7 +1,7 @@
 '''
-@author: zorbac
+@author: jingl3s
 
-Copyright 2014 zorbac at free.fr
+Copyright 2014 jingl3s 
 This code is free software; you can redistribute it and/or modify it
 under the terms of the BSD license (see the file
 COPYING.txt included with the distribution).
