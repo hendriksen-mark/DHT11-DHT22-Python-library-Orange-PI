@@ -1,6 +1,8 @@
 import time
-from pyA20.gpio import gpio
-from pyA20.gpio import port
+import OPi.GPIO as GPIO
+
+GPIO.setboard(GPIO.THREE)
+GPIO.setmode(GPIO.BOARD)
 
 
 class DHTResult:
@@ -24,7 +26,7 @@ class DHTResult:
 
 
 class DHT:
-    'DHT sensor reader class for Raspberry'
+    'DHT sensor reader class for Orange Pi'
 
     __pin = 0
 
@@ -37,18 +39,17 @@ class DHT:
             raise ValueError('invalid sensor dht')
 
     def read(self):
-        gpio.setcfg(self.__pin, gpio.OUTPUT)
+        GPIO.setup(self.__pin, GPIO.OUT)
 
         # send initial high
-        self.__send_and_sleep(gpio.HIGH, 0.05)
+        self.__send_and_sleep(1, 0.05)
 
         # pull down to low
-        self.__send_and_sleep(gpio.LOW, 0.02)
+        self.__send_and_sleep(0, 0.02)
 
         # change to input using pull up
         #gpio.setcfg(self.__pin, gpio.INPUT, gpio.PULLUP)
-        gpio.setcfg(self.__pin, gpio.INPUT)
-        gpio.pullup(self.__pin, gpio.PULLUP)
+        GPIO.setup(self.__pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
         # collect data into an array
         data = self.__collect_input()
@@ -92,7 +93,7 @@ class DHT:
             return DHTResult(DHTResult.ERR_NO_ERROR, the_bytes[2], the_bytes[0])
 
     def __send_and_sleep(self, output, sleep):
-        gpio.output(self.__pin, output)
+        GPIO.output(self.__pin, output)
         time.sleep(sleep)
 
     def __collect_input(self):
@@ -105,7 +106,7 @@ class DHT:
         last = -1
         data = []
         while True:
-            current = gpio.input(self.__pin)
+            current = GPIO.input(self.__pin)
             data.append(current)
             if last != current:
                 unchanged_count = 0
@@ -135,21 +136,21 @@ class DHT:
             current_length += 1
 
             if state == STATE_INIT_PULL_DOWN:
-                if current == gpio.LOW:
+                if current == 0:
                     # ok, we got the initial pull down
                     state = STATE_INIT_PULL_UP
                     continue
                 else:
                     continue
             if state == STATE_INIT_PULL_UP:
-                if current == gpio.HIGH:
+                if current == 1:
                     # ok, we got the initial pull up
                     state = STATE_DATA_FIRST_PULL_DOWN
                     continue
                 else:
                     continue
             if state == STATE_DATA_FIRST_PULL_DOWN:
-                if current == gpio.LOW:
+                if current == 0:
                     # we have the initial pull down, the next will be the data
                     # pull up
                     state = STATE_DATA_PULL_UP
@@ -157,7 +158,7 @@ class DHT:
                 else:
                     continue
             if state == STATE_DATA_PULL_UP:
-                if current == gpio.HIGH:
+                if current == 1:
                     # data pulled up, the length of this pull up will determine
                     # whether it is 0 or 1
                     current_length = 0
@@ -166,7 +167,7 @@ class DHT:
                 else:
                     continue
             if state == STATE_DATA_PULL_DOWN:
-                if current == gpio.LOW:
+                if current == 0:
                     # pulled down, we store the length of the previous pull up
                     # period
                     lengths.append(current_length)
